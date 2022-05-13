@@ -60,13 +60,14 @@
             on_connect().then(async () => {
                 repo_name = (await transceive('import consts;print(consts.INFO_HARDWARE_WOEZEL_NAME)')).trim();
                 let version = await transceive('import consts; consts.INFO_FIRMWARE_BUILD');
-                component.badge_firmware_version = parseInt(version);
+                component.badge_firmware_version = version;
                 component.checking_badge = false;
 
-                fetch('https://ota.badge.team/version/'+repo_name+'.txt',{mode:'cors'})
-                    .then(response => {response.json().then((version) => {
-                        component.server_firmware_version = version.build;
-                        component.server_firmware_name = version.name;
+                fetch('https://api.github.com/repos/emfcamp/TiDAL-Firmware/git/refs/tags/',{mode:'cors'})
+                    .then(response => {response.json().then((versions) => {
+                        let name = versions[versions.length-1].ref.split("/")[2]
+                        component.server_firmware_version = name;
+                        component.server_firmware_name = name;
                         component.checking_server = false;
                     })});
             });

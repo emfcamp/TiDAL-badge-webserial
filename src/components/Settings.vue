@@ -94,9 +94,9 @@
                 component.app_slugs = configurable_apps;
             },
             save_wifi: async () => {
-                await writetostdin('import machine, system;'+
-                    'machine.nvs_setstr("system", "wifi.ssid", "' + component.wifi_ssid + '");' +
-                    'machine.nvs_setstr("system", "wifi.password", "' + component.wifi_password + '");\r\n');
+                await writetostdin('import settings;'+
+                    'settings.set("wifi_ssid", "' + component.wifi_ssid + '");' +
+                    'settings.set("wifi_password", "' + component.wifi_password + '");settings.save()\r\n');
                 component.$emit('genNotification', 'WiFi settings updated successfully');
             },
             save_audio: async () => {
