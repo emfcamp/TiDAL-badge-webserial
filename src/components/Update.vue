@@ -41,6 +41,7 @@
         savetextfile,
         writetostdin
     } from '../badgecomm';
+    import {badges} from '../badge_configs';
 
     let component = undefined;
 
@@ -57,13 +58,18 @@
         beforeMount() {
             component = this;
             let repo_name = '';
+            let ota_version_url = badges['generic']['ota_version_url'];
             on_connect().then(async () => {
                 repo_name = (await transceive('import consts;print(consts.INFO_HARDWARE_WOEZEL_NAME)')).trim();
                 let version = await transceive('import consts; consts.INFO_FIRMWARE_BUILD');
                 component.badge_firmware_version = parseInt(version);
                 component.checking_badge = false;
 
-                fetch('https://ota.badge.team/version/'+repo_name+'.txt',{mode:'cors'})
+                if (badges[repo_name] && badges[repo_name]['ota_version_url']) {
+                    ota_version_url = badges[repo_name]['ota_version_url'];
+                }
+
+                fetch('https://'+ota_version_url+repo_name+'.txt',{mode:'cors'})
                     .then(response => {response.json().then((version) => {
                         component.server_firmware_version = version.build;
                         component.server_firmware_name = version.name;

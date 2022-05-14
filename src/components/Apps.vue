@@ -79,7 +79,7 @@
                                 </select>
                             </mdb-col>
                             <mdb-col sm="6">
-                                <span>Apps uploaded to hatchery.badge.team will automatically show up here for everyone. Be sure to upload yours! :)</span>
+                                <span>Apps uploaded to {{ hatchery_url }} will automatically show up here for everyone. Be sure to upload yours! :)</span>
                             </mdb-col>
                         </mdb-row>
 
@@ -126,6 +126,7 @@
     import VueMarkdown from 'vue-markdown';
     import {Sketch} from 'vue-color';
     import {on_connect, readfile, createfolder, savefile, fetch_dir, deldir, savetextfile} from '../badgecomm';
+    import {badges} from '../badge_configs';
     import * as pako from 'pako';
     import * as untar from 'js-untar';
     window.pako = pako;
@@ -164,8 +165,9 @@
                 }
                 component.launcher_items = launcher_items;
                 await component.update_local_apps();
-            
-                fetch('https://hatchery.badge.team/basket/'+component.repo_name+'/list/json',{mode:'cors'})
+
+                let basket_url = 'https://' + component.hatchery_url + '/basket/' + component.repo_name + '/list/json';
+                fetch(basket_url, {mode:'cors'})
                     .then(response => {response.json().then((apps) => {
                         component.store_apps = apps;
                         for(let app of apps) {
@@ -208,7 +210,7 @@
                 };
             },
             get_app_metadata: async (app_slug) => {
-                let metadata_url = 'https://badge.team/eggs/get/' + app_slug + '/json';
+                let metadata_url = 'https://' + hatchery_url + '/eggs/get/' + app_slug + '/json';
                 let response = await fetch(metadata_url);
                 let metadata = await response.json();
                 let release_keys = Object.keys(metadata.releases).sort((a, b) => parseInt(a) - parseInt(b));
@@ -326,6 +328,7 @@
         },
         data() {
             return {
+                repo_name: 'generic',
                 timeout_colorpicker: null,
                 current_page: 0,
                 current_index: -1,
@@ -353,7 +356,14 @@
                 return component.store_apps.filter((app) =>
                     (component.selected_store_category === 'all' || app.category === component.selected_store_category) &&
                     (component.selected_store_state === 'all' || app.status === component.selected_store_state));
-            }
+            },
+            hatchery_url() {
+                if (badges[component.repo_name] && badges[component.repo_name]['hatchery_url']) {
+                    return badges[component.repo_name]['hatchery_url'];
+                }
+
+                return badges['generic']['hatchery_url'];
+            },
         }
     }
 </script>
