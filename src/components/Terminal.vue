@@ -38,7 +38,7 @@
                 this.fitAddon.fit();
             },
             handleLog(str) {
-                console.log('handleLog');
+                // console.log('handleLog');
                 this.terminal.write(str.replace('\n', '\r\n'));
             }
         }

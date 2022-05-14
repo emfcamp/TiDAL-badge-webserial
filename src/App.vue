@@ -9,7 +9,7 @@
     </mdb-modal>
     <!-- Sidebar -->
     <div class="sidebar-fixed position-fixed">
-      <a class="logo-wrapper"><img alt="" class="img-fluid" src="./assets/cs_logo_round.png"/></a>
+      <a class="logo-wrapper"><img alt="" class="img-fluid" src="./assets/EMF-W-coral-LogoText-2022-colour.png"/></a>
       <mdb-list-group class="list-group-flush">
         <router-link to="/apps" @click.native="activeItem = 1">
           <mdb-list-group-item
@@ -47,16 +47,16 @@
         </div>
       </div>
     <!-- /Sidebar  -->
-    <main>
-      <div class="p-5">
+    <main class="d-flex flex-column min-vh-100">
+      <div class="flex-grow-1 p-5">
         <router-view v-on:genNotification="onNotification">
         </router-view>
       </div>
       <ftr color="primary-color-dark" class="text-center font-small darken-2">
         <div class="pb-4 pt-4">
-          <a href="https://twitter.com/hackzonenl"><mdb-icon fab icon="twitter" class="mr-3"/></a>
-          <a href="https://www.youtube.com/watch?v=G0mEW8f2vac"><mdb-icon fab icon="youtube" class="mr-3"/></a>
-          <a href="https://github.com/hackzone"><mdb-icon fab icon="github" class="mr-3"/></a>
+          <a href="https://twitter.com/emfcamp"><mdb-icon fab icon="twitter" class="mr-3"/></a>
+          <!-- <a href="https://www.youtube.com/watch?v=G0mEW8f2vac"><mdb-icon fab icon="youtube" class="mr-3"/></a> -->
+          <a href="https://github.com/emfcamp"><mdb-icon fab icon="github" class="mr-3"/></a>
         </div>
       </ftr>
     </main>
@@ -154,7 +154,7 @@ export default {
 
 <style scoped>
 main {
-  background-color: #ededee;
+  background-color: #3c3c3c;
 }
 
 .flexible-content {
@@ -175,14 +175,15 @@ main {
   width: 270px;
   box-shadow: 0 2px 5px 0 rgba(0, 0, 0, 0.16), 0 2px 10px 0 rgba(0, 0, 0, 0.12);
   z-index: 1050;
-  background-color: #fff;
+  background-color: #171123;
   padding: 1.5rem;
   padding-top: 0;
 }
 
 .sidebar-fixed .logo-wrapper img {
   width: 100%;
-  padding: 2.5rem;
+  padding-top: 0.5rem;
+  padding-bottom: 0.5rem;
 }
 
 .sidebar-fixed .list-group-item {
