@@ -2,7 +2,7 @@
  * Created by Tom on 5/27/2020.
  */
 export let device = {opened: false};
-export let port, stdout_callback, reader, writer;
+export let port, stdout_callback, reader, writer, outputDone, readableStreamClosed;
 
 let MAX_RETRIES = 3;
 
@@ -39,20 +39,26 @@ function strip_flash(path) {
 }
 
 async function transceive(data, add_newlines=true) {
-    if(typeof(data) != 'string') {
+    if (typeof(data) != 'string') {
         console.debug('Can\'t call transceive on non-text data');
         return;
     }
+
     if (add_newlines && !data.endsWith('\r\n')) {
         data = data.trimEnd() + '\r\n';
     }
+
     await writer.write(data);
     let {value, done} = await reader.read();
+    if (done) {
+        return '';
+    }
 
     if (value.indexOf(data) == 0) {
         // Strip echoed command from answer
         value = value.slice(data.length); // Includes the newline characters after the echoed command
     }
+
     return value;
 }
 
@@ -224,13 +230,44 @@ export function on_connect() {
 
 
 export async function connect() {
-    port = await navigator.serial.requestPort();
-    await port.open({baudRate: 115200});
+    try {
+        port = await navigator.serial.requestPort();
+    } catch (error) {
+        // DOMException "SecurityError": The returned Promise rejects with this error if a Feature Policy restricts use of this API or a permission to use it has not granted via a user gesture.
+        // DOMException "AbortError": The returned Promise rejects with this if the user does not select a port when prompted.
+        console.log('requestPort', error)
+        // TODO: flash a message "You need to select a port and click connect"
 
-    reader = port.readable.pipeThrough(new TextDecoderStream()).pipeThrough(new TransformStream(new PyShellTransformer())).getReader();
-    
+        return false;
+    }
+
+
+    port.ondisconnect = (event) => {
+        console.log('ondisconnect', event);
+      // notify that the port has become unavailable
+      device.opened = false;
+    };
+
+    try {
+        await port.open({baudRate: 115200});
+    } catch (error) {
+        // InvalidStateError: Returned if the port is already open.
+        // NetworkError DOMException: Returned if the attempt to open the port failed.
+        console.log('port open', error);
+        // TODO: flash a message "Failed to open port?"
+
+        return false;
+    }
+
+    let textDecoder = new TextDecoderStream();
+    readableStreamClosed = port.readable.pipeTo(textDecoder.writable);
+    reader = textDecoder.readable
+      .pipeThrough(new TransformStream(new PyShellTransformer()))
+      .getReader();
+
+
     let encoder = new TextEncoderStream();
-    let outputDone = encoder.readable.pipeTo(port.writable);
+    outputDone = encoder.readable.pipeTo(port.writable);
     let outputStream = encoder.writable;
     writer = outputStream.getWriter();
 
@@ -239,5 +276,35 @@ export async function connect() {
     await reset();
     device.opened = true;
 }
+
+export async function disconnect() {
+    // console.log('disconnect', port);
+
+    reader.cancel();
+    await readableStreamClosed.catch(() => { /* Ignore the error */ });
+
+    writer.close();
+    await outputDone;
+
+    // not sure if i need to dispose of these like this -LWK
+    window.reader = null;
+    reader = null;
+    writer = null;
+
+
+    try {
+        await port.close();
+    } catch (error) {
+        console.log('port.close', error);
+        return false;
+    }
+
+    port = null; // same question here -LWK
+    device.opened = false;
+
+    // TODO: flash badge disconnected ok? or handle in App.vue?
+    return true;
+}
+
 
 window.transceive = transceive;

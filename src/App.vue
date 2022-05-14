@@ -1,6 +1,6 @@
 <template>
   <div class="flexible-content">
-    <mdb-modal size="lg" style="cursor: pointer; z-index: 9999;" v-show="!is_connected" @click.native="connect()">
+    <mdb-modal size="lg" style="cursor: pointer; z-index: 9999;" v-show="false && !is_connected" @click.native="connect()">
       <mdb-modal-header>
         <mdb-modal-title>Let's get started</mdb-modal-title>
       </mdb-modal-header>
@@ -11,33 +11,37 @@
     <div class="sidebar-fixed position-fixed">
       <a class="logo-wrapper"><img alt="" class="img-fluid" src="./assets/EMF-W-coral-LogoText-2022-colour.png"/></a>
       <mdb-list-group class="list-group-flush">
-        <router-link to="/apps" @click.native="activeItem = 1">
+          <mdb-list-group-item
+            :action="true"
+            @click.native="connectClicked"
+            :disabled="! has_serial"
+            >
+            <mdb-icon :icon="!is_connected ? 'phone' : 'phone-slash'" class="mr-3" />{{ !is_connected ? 'Connect' : 'Disconnect' }}
+          </mdb-list-group-item>
           <mdb-list-group-item
             :action="true"
             :class="activeItem === 1 && 'active'"
-            ><mdb-icon
-              icon="table"
-              class="mr-3"
-            />Apps</mdb-list-group-item>
-        </router-link>
-        <router-link to="/programming" @click.native="activeItem = 2">
+            @click.native="$router.push('/apps')"
+            :disabled="!is_connected"
+            ><mdb-icon icon="table" class="mr-3" />Apps</mdb-list-group-item>
           <mdb-list-group-item
-                  :action="true"
-                  :class="activeItem === 2 && 'active'"
-          ><mdb-icon icon="i-cursor" class="mr-3" style="width:16px;text-align:center" />Programming & Files</mdb-list-group-item>
-        </router-link>
-        <router-link to="/update" @click.native="activeItem = 3">
+            :action="true"
+            :class="activeItem === 2 && 'active'"
+            @click.native="$router.push('/programming')"
+            :disabled="!is_connected"
+            ><mdb-icon icon="i-cursor" class="mr-3" style="width:16px;text-align:center" />Programming & Files</mdb-list-group-item>
           <mdb-list-group-item
-                  :action="true"
-                  :class="activeItem === 3 && 'active'"
+            :action="true"
+            :class="activeItem === 3 && 'active'"
+            @click.native="$router.push('/update')"
+            :disabled="!is_connected"
           ><mdb-icon icon="bolt" class="mr-3" style="width:16px;text-align:center" />Update</mdb-list-group-item>
-        </router-link>
-        <router-link to="/settings" @click.native="activeItem = 4">
           <mdb-list-group-item
-                  :action="true"
-                  :class="activeItem === 4 && 'active'"
-          ><mdb-icon icon="cog" class="mr-3" />Settings</mdb-list-group-item>
-        </router-link>
+            :action="true"
+            :class="activeItem === 4 && 'active'"
+            @click.native="$router.push('/settings')"
+            :disabled="!is_connected"
+            ><mdb-icon icon="cog" class="mr-3" />Settings</mdb-list-group-item>
       </mdb-list-group>
     </div>
     <!-- notifications -->
@@ -77,7 +81,7 @@ import {
   waves
 } from "mdbvue";
 
-import {device, connect} from './badgecomm';
+import {device, connect, disconnect} from './badgecomm';
 
 let component = undefined;
 setInterval(() => {
@@ -111,7 +115,18 @@ export default {
     ftr: mdbFooter
   },
   methods: {
+    connectClicked() {
+      if (! component.is_connected) {
+        connect();
+      } else {
+        disconnect();
+        if (component.$route.name != 'Welcome') {
+          component.$router.push('/');
+        }
+      }
+    },
     connect:connect,
+    disconnect:disconnect,
     onNotification: (message, title='', icon='info', color='elegant', lifetime=30) => {
       let newmessage = {id: component.message_id, title:title, message:message, icon:icon, color:color, lifetime:lifetime};
       component.message_id++;
@@ -123,13 +138,16 @@ export default {
       show: true,
       message_id: 1,
       messages: [],
-      activeItem: 1,
       is_connected: device !== undefined && device.opened
     };
   },
+  computed:{
+    activeItem() {
+      return component.$route.meta.page;
+    }
+  },
   beforeMount() {
     component = this;
-    this.activeItem = this.$route.matched[0].props.default.page;
     this.has_serial = !!navigator.serial;
   },
   mixins: [waves]
