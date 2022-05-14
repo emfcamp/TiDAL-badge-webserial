@@ -66,6 +66,7 @@
         },
         methods: {
             update_local_apps: async () => {
+                repo_name = (await transceive('import consts;print(consts.INFO_HARDWARE_WOEZEL_NAME)')).trim();
                 let install_paths = ['/flash/apps'];
                 let configurable_apps = [];
 
@@ -94,9 +95,15 @@
                 component.app_slugs = configurable_apps;
             },
             save_wifi: async () => {
-                await writetostdin('import machine, system;'+
-                    'machine.nvs_setstr("system", "wifi.ssid", "' + component.wifi_ssid + '");' +
-                    'machine.nvs_setstr("system", "wifi.password", "' + component.wifi_password + '");\r\n');
+                if (component.repo_name == 'tidal') {
+                    await writetostdin('import settings;'+
+                        'settings.set("wifi_ssid", "' + component.wifi_ssid + '");' +
+                        'settings.set("wifi_password", "' + component.wifi_password + '");settings.save()\r\n');
+                } else {
+                    await writetostdin('import machine, system;'+
+                        'machine.nvs_setstr("system", "wifi.ssid", "' + component.wifi_ssid + '");' +
+                        'machine.nvs_setstr("system", "wifi.password", "' + component.wifi_password + '");\r\n');
+                }
                 component.$emit('genNotification', 'WiFi settings updated successfully');
             },
             save_audio: async () => {
@@ -113,6 +120,7 @@
         },
         data() {
             return {
+                repo_name: 'generic',
                 wifi_ssid: '',
                 wifi_password: '',
                 app_slugs: [],

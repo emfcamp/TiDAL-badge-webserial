@@ -62,19 +62,30 @@
             on_connect().then(async () => {
                 repo_name = (await transceive('import consts;print(consts.INFO_HARDWARE_WOEZEL_NAME)')).trim();
                 let version = await transceive('import consts; consts.INFO_FIRMWARE_BUILD');
-                component.badge_firmware_version = parseInt(version);
+                component.badge_firmware_version = repo_name == 'tidal' ? version : parseInt(version);
                 component.checking_badge = false;
+
 
                 if (badges[repo_name] && badges[repo_name]['ota_version_url']) {
                     ota_version_url = badges[repo_name]['ota_version_url'];
                 }
 
-                fetch('https://'+ota_version_url+repo_name+'.txt',{mode:'cors'})
-                    .then(response => {response.json().then((version) => {
-                        component.server_firmware_version = version.build;
-                        component.server_firmware_name = version.name;
-                        component.checking_server = false;
-                    })});
+                if (repo_name == 'tidal') {
+                    fetch('https://api.github.com/repos/emfcamp/TiDAL-Firmware/git/refs/tags/',{mode:'cors'})
+                        .then(response => {response.json().then((versions) => {
+                            let name = versions[versions.length-1].ref.split("/")[2]
+                            component.server_firmware_version = name;
+                            component.server_firmware_name = name;
+                            component.checking_server = false;
+                        })});
+                } else {
+                    fetch('https://'+ota_version_url+repo_name+'.txt',{mode:'cors'})
+                        .then(response => {response.json().then((version) => {
+                            component.server_firmware_version = version.build;
+                            component.server_firmware_name = version.name;
+                            component.checking_server = false;
+                        })});
+                }
             });
         },
         methods: {
