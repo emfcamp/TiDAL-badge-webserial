@@ -57,20 +57,19 @@
         },
         beforeMount() {
             component = this;
-            let repo_name = '';
             let ota_version_url = badges['generic']['ota_version_url'];
             on_connect().then(async () => {
-                repo_name = (await transceive('import consts;print(consts.INFO_HARDWARE_WOEZEL_NAME)')).trim();
+                component.repo_name = (await transceive('import consts;print(consts.INFO_HARDWARE_WOEZEL_NAME)')).trim();
                 let version = await transceive('import consts; consts.INFO_FIRMWARE_BUILD');
-                component.badge_firmware_version = repo_name == 'tidal' ? version : parseInt(version);
+                component.badge_firmware_version = component.repo_name == 'tidal' ? version : parseInt(version);
                 component.checking_badge = false;
 
 
-                if (badges[repo_name] && badges[repo_name]['ota_version_url']) {
-                    ota_version_url = badges[repo_name]['ota_version_url'];
+                if (badges[component.repo_name] && badges[component.repo_name]['ota_version_url']) {
+                    ota_version_url = badges[component.repo_name]['ota_version_url'];
                 }
 
-                if (repo_name == 'tidal') {
+                if (component.repo_name == 'tidal') {
                     fetch('https://api.github.com/repos/emfcamp/TiDAL-Firmware/git/refs/tags/',{mode:'cors'})
                         .then(response => {response.json().then((versions) => {
                             let name = versions[versions.length-1].ref.split("/")[2]
@@ -79,7 +78,7 @@
                             component.checking_server = false;
                         })});
                 } else {
-                    fetch('https://'+ota_version_url+repo_name+'.txt',{mode:'cors'})
+                    fetch('https://'+ota_version_url+component.repo_name+'.txt',{mode:'cors'})
                         .then(response => {response.json().then((version) => {
                             component.server_firmware_version = version.build;
                             component.server_firmware_name = version.name;
@@ -95,6 +94,7 @@
         },
         data() {
             return {
+                repo_name: 'generic',
                 badge_firmware_version: 0,
                 badge_firmware_name: '',
                 server_firmware_version: 0,
