@@ -64,9 +64,9 @@ async function transceive(data, add_newlines=true) {
 
 async function reset() {
     // Toggle badge reset pin
-    await port.setSignals({ requestToSend: true, dataTerminalReady: false });
-    await sleep(100);
-    await port.setSignals({ requestToSend: false, dataTerminalReady: false });
+    //await port.setSignals({ requestToSend: true, dataTerminalReady: false });
+    //await sleep(100);
+    //await port.setSignals({ requestToSend: false, dataTerminalReady: false });
     
     // Wait for the firmware to start
     await sleep(1000);
