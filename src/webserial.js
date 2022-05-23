@@ -38,6 +38,42 @@ function strip_flash(path) {
     return path.startsWith('/flash') ? path.slice('/flash'.length) : path;
 }
 
+async function transceive_atomic(data, timeout=1000) {
+    const command_id = Math.floor(Math.random() * 10000000)
+    const result_header = "BEGIN " + command_id
+    const result_tail = "END " + command_id
+    const end_time = Date.now() + timeout
+
+    // Wrap data in a prologue and epilogue with a random number in it, and do so in paste mode
+    data = '\r\n\x05print("' + result_header + '")\r\n' + data + '\r\nprint("\\n' + result_tail + '")\r\n\x04\r\n'
+    let result = await transceive(data, false)
+
+    // Loop while we don't have the tail marker, getting more data
+    while (result.indexOf(result_tail) == -1) {
+        // Check against the timeout
+        if (Date.now() > end_time) {
+            throw new Error("Timeout during serial transceive")
+        }
+
+        // Transceive a newline, so we're guaranteed not to hang waiting for data
+        result += await transceive("\n", false)
+    }
+
+    // Cut the value to things after the result of the last header
+    let header_position = result.lastIndexOf(result_header)
+    if (header_position >= 0) {
+        // Slice off the header and the trailing newline
+        result = result.slice(header_position + result_header.length + 2, result.length)
+    }
+
+    // Now cut up to the start of the trailing section
+    let tail_position = result.lastIndexOf(result_tail)
+    if (tail_position >= 0) {
+        result = result.slice(0, tail_position-2)
+    }
+    return result
+}
+
 async function transceive(data, add_newlines=true) {
     if (typeof(data) != 'string') {
         console.debug('Can\'t call transceive on non-text data');
@@ -81,7 +117,7 @@ export async function fetch_dir(dir_name) {
     if (dir_name === undefined || dir_name === '') {
         dir_name = '/';
     }
-    let answer = await transceive(`from upysh import ls; ls('${dir_name}')`);
+    let answer = await transceive_atomic(`from upysh import ls; ls('${dir_name}')`);
     let lines = answer.trimEnd().split('\n');
     let result = [dir_name !== '' ? dir_name : '/'];
 
@@ -99,13 +135,13 @@ export async function fetch_dir(dir_name) {
 
 export async function readfile(file_name, return_string=true) {
     file_name = strip_flash(file_name);
-    let contents = await transceive(`from upysh import cat; cat('${file_name}')`);
+    let contents = await transceive_atomic(`from upysh import cat; cat('${file_name}')`);
     return contents.replaceAll('\r\n', '\n')
 }
 
 export async function createfile(file_name) {
     file_name = strip_flash(file_name);
-    return await transceive(`f=open('${file_name}', 'w'); f.close()`);
+    return await transceive_atomic(`f=open('${file_name}', 'w'); f.close()`);
 }
 
 export async function deldir(dir_name) {
@@ -150,7 +186,7 @@ export async function downloaddir(dir_name, zip=undefined) {
 
 export function delfile(file_name) {
     file_name = strip_flash(file_name);
-    return transceive(`from upysh import rm; rm('${file_name}')`);
+    return transceive_atomic(`from upysh import rm; rm('${file_name}')`);
 }
 
 export function runfile(file_path) {
@@ -158,7 +194,7 @@ export function runfile(file_path) {
     if(file_path.startsWith('/flash')) {
         file_path = file_path.slice('/flash'.length);
     }
-    return transceive(`__import__('${file_path}')`);
+    return transceive_atomic(`__import__('${file_path}')`);
 }
 
 export function duplicatefile(source, destination) {
@@ -170,39 +206,39 @@ export function duplicatefile(source, destination) {
 export function movefile(source, destination) {
     source = strip_flash(source);
     destination = strip_flash(destination);
-    return transceive(`from upysh import mv; mv('${source}', '${destination}')`);
+    return transceive_atomic(`from upysh import mv; mv('${source}', '${destination}')`);
 }
 
 export function copyfile(source, destination) {
     source = strip_flash(source);
     destination = strip_flash(destination);
-    return transceive(`from upysh import cp; cp('${source}', '${destination}')`);
+    return transceive_atomic(`from upysh import cp; cp('${source}', '${destination}')`);
 }
 
 export function savetextfile(filename, contents) {
     filename = strip_flash(filename);
     let escaped = contents.replaceAll('\r', '\\r').replaceAll('\n', '\\n').replaceAll("'", "\\'");
-    return transceive(`\x05f=open('${filename}', 'wt')\r\nf.write('${escaped}')\r\nf.close()\x04`, false);
+    return transceive_atomic(`f=open('${filename}', 'wt')\r\nf.write('${escaped}')\r\nf.close()`);
 }
 
 export async function savefile(filename, contents) {
     filename = strip_flash(filename);
     let data = new Uint8Array(contents);
-    await transceive(`import binascii; f=open('${filename}', 'wb')\r\n`);
+    await transceive_atomic(`import binascii; f=open('${filename}', 'wb')\r\n`);
 
     let chunk_size = 512;
     for (let i = 0; i < data.length; i += chunk_size) {
         let chunk_data = data.slice(i, i + chunk_size);
         let base64 = encode(chunk_data);
-        await transceive(`f.write(binascii.a2b_base64('${base64}'))\r\n`, false);
+        await transceive_atomic(`f.write(binascii.a2b_base64('${base64}'))\r\n`);
     }
 
-    return transceive(`f.close()\r\n`, false);
+    return transceive_atomic(`f.close()\r\n`);
 }
 
 export function createfolder(folder) {
     folder = strip_flash(folder);
-    return transceive(`from upysh import mkdir; mkdir('${folder}')`);
+    return transceive_atomic(`from upysh import mkdir; mkdir('${folder}')`);
 }
 
 export function registerstdout(func) {
