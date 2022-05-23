@@ -66,7 +66,7 @@
         },
         methods: {
             update_local_apps: async () => {
-                repo_name = (await transceive('import consts;print(consts.INFO_HARDWARE_WOEZEL_NAME)')).trim();
+                component.repo_name = (await transceive('import consts;print(consts.INFO_HARDWARE_WOEZEL_NAME)')).trim();
                 let install_paths = ['/flash/apps'];
                 let configurable_apps = [];
 
