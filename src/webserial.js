@@ -121,6 +121,8 @@ export async function fetch_dir(dir_name) {
     let lines = answer.trimEnd().split('\n');
     let result = [dir_name !== '' ? dir_name : '/'];
 
+    // Cut off space remaining
+    lines = lines.slice(0, -1)
     for (let line of lines) {
         line = line.trim();
         if (line === '') {
