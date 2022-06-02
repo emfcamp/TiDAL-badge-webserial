@@ -217,10 +217,18 @@ export function copyfile(source, destination) {
     return transceive_atomic(`from upysh import cp; cp('${source}', '${destination}')`);
 }
 
-export function savetextfile(filename, contents) {
+export async function savetextfile(filename, contents) {
     filename = strip_flash(filename);
-    let escaped = contents.replaceAll('\r', '\\r').replaceAll('\n', '\\n').replaceAll("'", "\\'");
-    return transceive_atomic(`f=open('${filename}', 'wt')\r\nf.write('${escaped}')\r\nf.close()`);
+    const parts = contents.match(/.{1,32}/sg);
+    await transceive_atomic(`f=open('${filename}', 'wt')`);
+    console.log("hi");
+    for (let part of parts) {
+        let escaped = part.replaceAll('\r', '\\r').replaceAll('\n', '\\n').replaceAll("'", "\\'");
+        await transceive_atomic(`f.write('${escaped}')`);
+        console.log("part");
+    }
+    console.log("bye");
+    await transceive_atomic(`f.close()`);
 }
 
 export async function savefile(filename, contents) {
