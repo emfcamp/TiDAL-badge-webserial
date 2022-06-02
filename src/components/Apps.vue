@@ -187,7 +187,11 @@
                 let apps = [];
 
                 for(let path of install_paths) {
-                    let dir = await fetch_dir(path);                    
+                    let dir = await fetch_dir(path);
+                    if (dir == "") {
+                        return;
+                    }
+
                     let dir_contents = dir.split('\n');
                     for (let item of dir_contents) {
                         if(item[0] !== 'd') { continue; }

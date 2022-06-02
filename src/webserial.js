@@ -118,6 +118,9 @@ export async function fetch_dir(dir_name) {
         dir_name = '/';
     }
     let answer = await transceive_atomic(`from upysh import ls; ls('${dir_name}')`);
+    if (answer.includes("ENOENT")) {
+        return "";
+    }
     let lines = answer.trimEnd().split('\n');
     let result = [dir_name !== '' ? dir_name : '/'];
 
@@ -149,6 +152,9 @@ export async function createfile(file_name) {
 export async function deldir(dir_name) {
     dir_name = strip_flash(dir_name);
     let dir = await fetch_dir(dir_name)
+    if (dir == "") {
+        return;
+    }
     let dirlist = dir.split('\n');
     dirlist.unshift();
     console.log(dirlist);
@@ -171,6 +177,9 @@ export async function downloaddir(dir_name, zip=undefined) {
     dir_name = strip_flash(dir_name);
 
     let dir = await fetch_dir(dir_name)
+    if (dir == "") {
+        return;
+    }
     let dirlist = dir.split('\n');
     dirlist.unshift();
     console.log(dirlist);
