@@ -362,4 +362,4 @@ export async function disconnect() {
 }
 
 
-window.transceive = transceive;
+window.transceive = transceive_atomic;
