@@ -5,6 +5,7 @@
         <section>
           <mdb-row>
             <mdb-col sm='6' md='4' lg='3'>
+              <mdb-btn color='gray' size='lg' title='Make app' v-on:click='mkapp_ui()' icon='plus'></mdb-btn>
               <mdb-btn color='gray' size='lg' title='Make folder' v-on:click='mkdir_ui()' icon='folder-plus'></mdb-btn>
               <mdb-btn color='gray' size='lg' title='Make file' v-on:click='mkfile_ui()' icon='file'></mdb-btn>
               <mdb-btn color='gray' size='lg' title='Rename file' v-on:click='rename_ui()' icon='file-alt'></mdb-btn>
@@ -280,6 +281,14 @@ export default {
           component.editorfilename = parent_path + '/' + filename ;
         }
         component.itemClick(selected_item.$parent); // Refresh parent directory
+      }
+    },
+    mkapp_ui: () => {
+      let app_name = prompt("Please enter new app id (letters only)", "");
+      if(app_name) {
+        createfolder('/apps/' + app_name);
+        savetextfile('/apps/' + app_name + '/__init__.py', `import app\r\n\r\nclass ${app_name}(app.TextApp):\r\n\r\n    def on_activate(self):\r\n        super().on_activate()\r\n        self.window.println("Hello world")\r\n\r\nmain = ${app_name}\r\n`);
+        component.itemClick(entry); // Refresh parent directory
       }
     },
     mkdir_ui: () => {
