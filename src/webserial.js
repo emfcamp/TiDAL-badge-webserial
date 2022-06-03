@@ -38,7 +38,7 @@ function strip_flash(path) {
     return path.startsWith('/flash') ? path.slice('/flash'.length) : path;
 }
 
-async function transceive_atomic(data, timeout=1000) {
+async function transceive_atomic(data, timeout=3000) {
     const command_id = Math.floor(Math.random() * 10000000)
     const result_header = "BEGIN " + command_id
     const result_tail = "END " + command_id
@@ -46,7 +46,9 @@ async function transceive_atomic(data, timeout=1000) {
 
     // Wrap data in a prologue and epilogue with a random number in it, and do so in paste mode
     data = '\r\n\x05print("' + result_header + '")\r\n' + data + '\r\nprint("\\n' + result_tail + '")\r\n\x04\r\n'
+    await sleep(50);
     let result = await transceive(data, false)
+    await sleep(50);
 
     // Loop while we don't have the tail marker, getting more data
     while (result.indexOf(result_tail) == -1) {
@@ -56,7 +58,9 @@ async function transceive_atomic(data, timeout=1000) {
         }
 
         // Transceive a newline, so we're guaranteed not to hang waiting for data
-        result += await transceive("\n", false)
+        result += await transceive("\r\n", false)
+        //console.log("Waiting for " + result_tail +" in " + result);
+        await sleep(50);
     }
 
     // Cut the value to things after the result of the last header
@@ -71,6 +75,7 @@ async function transceive_atomic(data, timeout=1000) {
     if (tail_position >= 0) {
         result = result.slice(0, tail_position-2)
     }
+    await sleep(50);
     return result
 }
 

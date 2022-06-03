@@ -285,10 +285,12 @@ export default {
     },
     mkapp_ui: () => {
       let app_name = prompt("Please enter new app id (letters only)", "");
+      createfolder('/apps');
+      
       if(app_name) {
+        let class_name = app_name.charAt(0).toUpperCase() + app_name.slice(1);
         createfolder('/apps/' + app_name);
-        savetextfile('/apps/' + app_name + '/__init__.py', `import app\r\n\r\nclass ${app_name}(app.TextApp):\r\n\r\n    def on_activate(self):\r\n        super().on_activate()\r\n        self.window.println("Hello world")\r\n\r\nmain = ${app_name}\r\n`);
-        component.itemClick(entry); // Refresh parent directory
+        savetextfile('/apps/' + app_name + '/__init__.py', `import app\r\n\r\nclass ${class_name}(app.TextApp):\r\n\r\n    def on_activate(self):\r\n        super().on_activate()\r\n        self.window.println("Hello world")\r\n\r\nmain = ${class_name}\r\n# This will show in your badge launcher as ${app_name}`);
       }
     },
     mkdir_ui: () => {
