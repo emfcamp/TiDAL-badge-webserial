@@ -253,7 +253,7 @@ export default {
         zip.generateAsync({type:"blob"})
         .then(function (blob) {
             saveAs(blob, "download.zip");
-            component.$emit('genNotification','Download succes', 'Download succes', 'check', 'green', 30);
+            component.$emit('genNotification','Download success', 'Download success', 'check', 'green', 30);
         });
       } else {
         component.$emit('genNotification', 'Can only download folder','Download failed','times', 'red', 30);
@@ -265,7 +265,7 @@ export default {
         await savetextfile(component.editorfilename, component.content_editor);
         component.content_original = component.content_editor;
         component.updateNode(selected_item.$parent);
-        component.$emit('genNotification','Save succes', 'Save succes', 'check', 'green', 30);
+        component.$emit('genNotification','Save success', 'Save success', 'check', 'green', 30);
       }
     },
     rename_ui: () => {
