@@ -366,7 +366,7 @@
                     return badges[component.repo_name]['hatchery_url'];
                 }
 
-                return badges['generic']['hatchery_url'];
+                return badges['tidal']['hatchery_url'];
             },
         }
     }
