@@ -155,7 +155,12 @@
             component = this;
             (async () => {
                 await on_connect();
-                component.repo_name = (await transceive('import consts;print(consts.INFO_HARDWARE_WOEZEL_NAME)')).trim();
+                component.repo_name = 'tidal';
+                const badge_repo_name = (await transceive('import consts;print(consts.INFO_HARDWARE_WOEZEL_NAME)')).trim();
+                if (badge_repo_name != component.repo_name) {
+                    console.error(`Badge repo_name ${badge_repo_name} does not match ${component.repo_name}`);
+                    component.$emit('genNotification', `Your badge identifies itself as a different model. Apps may not work as expected.`);
+                }
                 let contents = await readfile('/flash/config/system-launcher_items.json', );
                 let launcher_items;
                 try {
@@ -214,6 +219,11 @@
                 };
             },
             get_app_metadata: async (app_slug) => {
+                if (/[/\\#?]/.test(app_slug)) {
+                    console.error(`app_slug ${app_slug} contains invalid characters`);
+                    component.$emit('genNotification', `This app name contains invalid characters and cannot be loaded`);
+                    return;
+                }
                 let metadata_url = 'https://' + component.hatchery_url + '/eggs/get/' + app_slug + '/json';
                 let response = await fetch(metadata_url);
                 let metadata = await response.json();
