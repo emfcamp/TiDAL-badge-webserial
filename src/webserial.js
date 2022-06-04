@@ -245,7 +245,7 @@ export async function savefile(filename, contents) {
     let data = new Uint8Array(contents);
     await transceive_atomic(`import binascii; f=open('${filename}', 'wb')\r\n`);
 
-    let chunk_size = 512;
+    let chunk_size = 100;
     for (let i = 0; i < data.length; i += chunk_size) {
         let chunk_data = data.slice(i, i + chunk_size);
         let base64 = encode(chunk_data);
@@ -362,4 +362,4 @@ export async function disconnect() {
 }
 
 
-window.transceive = transceive;
+window.transceive = transceive_atomic;

@@ -214,7 +214,7 @@
                 };
             },
             get_app_metadata: async (app_slug) => {
-                let metadata_url = 'https://' + hatchery_url + '/eggs/get/' + app_slug + '/json';
+                let metadata_url = 'https://' + component.hatchery_url + '/eggs/get/' + app_slug + '/json';
                 let response = await fetch(metadata_url);
                 let metadata = await response.json();
                 let release_keys = Object.keys(metadata.releases).sort((a, b) => parseInt(a) - parseInt(b));
@@ -265,6 +265,7 @@
                     }
                     component.$emit('genNotification', 'Installed ' + metadata.name + ' successfully');
                 } catch(error) {
+                    console.error('Error installing ' + app_slug, error);
                     try {
                         await deldir(install_path + app_slug);
                     } catch(error) {
